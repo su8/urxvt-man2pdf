@@ -1,4 +1,4 @@
-#! /usr/bin/env perl
+#!/usr/bin/env perl
 # Author:   Aaron Caffrey
 # Website:  https://github.com/wifiextender/urxvt-man2pdf
 # License:  GPLv3
@@ -16,6 +16,8 @@ sub on_user_command {
     my $cur_row = $self->nrow - 1;
     my $top = $self->top_row;
 
+    return unless -w $ENV{HOME};
+
     while ($cur_row >= $top) {
       my $line_obj = $self->line ($cur_row);
       my $it_found_smth = $self->try_conversion ($line_obj->t);
@@ -24,42 +26,38 @@ sub on_user_command {
       $cur_row = $line_obj->beg - 1;
     }
   }
-  ()
+  return;
 }
 
 sub try_conversion {
   my ($self) = shift;
   my ($text) = @_;
+  my $pdf_dir = $ENV{HOME} . "/man2pdf";
 
-  if ($text =~ /\([^)]*\)/) {
-    $text =~ s/\([^)]*\)//g;             # strip (1) from printf(1)
-    $text =~ s/(?!\-|\.)[[:punct:]]//g;  # strip [\$#@~!&*()\[\];,:?^`\\\/]+;
-    my @arr = split(/\s+/, $text);
-    my $page = $arr[$#arr] ? lc $arr[$#arr] : "";
+  return 0 unless $text =~ /\([^)]*\)/;
 
-    # the LESS pager line makes it easy for us
-    if ($page =~ /\d+$/) {
-      my @new_arr = split(" ", join(" ", @arr)); # strip left-right space
-      if (lc $new_arr[0] eq "manual" and lc $new_arr[3] eq "line") {
-        $page = lc $new_arr[2];
-      }
+  $text =~ s/\([^)]*\)//g;             # strip (1) from printf(1)
+  $text =~ s/(?!\-|\.)[[:punct:]]//g;  # strip [\$#@~!&*()\[\];,:?^`\\\/]+;
+  my @arr = split(/\s+/, $text);
+  my $page = $arr[$#arr] ? lc $arr[$#arr] : "";
+
+  # the LESS pager line makes it easy for us
+  if ($page =~ /\d+$/) {
+    my @new_arr = split(" ", join(" ", @arr)); # strip left-right space
+    if (lc $new_arr[0] eq "manual" and lc $new_arr[3] eq "line") {
+      $page = lc $new_arr[2];
     }
+  }
+  return 0 unless $page ne "";
 
-    if ($page ne "") {
-      my $has_ext = `man -Iw $page`;  # to check for file extension
+  my $has_ext = `man -Iw $page`;  
+  if ($? == 0) {
+    if ($has_ext =~ /\.\w+$/) {
+      mkdir($pdf_dir, 0700) unless (-d $pdf_dir);
 
-      if ($? == 0) {
-        if (-w $ENV{"HOME"}) {
-          my $pdf_dir = $ENV{"HOME"} . "/man2pdf";
-          mkdir($pdf_dir, 0700) unless(-d $pdf_dir);
-
-          if ($has_ext =~ /\.\w+$/) {
-            $self->exec_async ("man -Tpdf $page > $pdf_dir/$page.pdf");
-            $self->exec_async ("notify-send \"Trying to convert $pdf_dir/$page.pdf\"");
-            return 1;
-          }
-        }
-      }
+      $self->exec_async ("man -Tpdf $page > $pdf_dir/$page.pdf");
+      $self->exec_async ("notify-send \"Trying to convert $pdf_dir/$page.pdf\"");
+      return 1;
     }
   }
   return 0;
