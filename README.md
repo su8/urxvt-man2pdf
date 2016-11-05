@@ -2,7 +2,7 @@ Convert man page while reading it to pdf in urxvt.
 No need to quit reading or open another terminal instance/tab.
 Bind the desired keyboard shortcut and this extension will do all the heavy lifting for you.
 
-![](https://cloud.githubusercontent.com/assets/4725121/16555529/6e02ec1c-41d5-11e6-9ca6-1009de85e11a.png)
+![](img.png)
 
 # Installation
 
@@ -12,18 +12,27 @@ You can also put it in a folder of your choice, but then you have to add this
 line to your **.Xdefaults/.Xresources**:
 
 ```bash
-# Don't type ~ or $HOME below
 URxvt.perl-lib: /home/user/your/folder/
-```
-
-After installing, put the following lines in your **.Xdefaults/.Xresources**:
-
-```bash
-# libs to activate, do not omit selection-to-clipboard
+# extension to activate
 URxvt.perl-ext-common           : man
 
 # keyboard shortcut to trigger the lib
 URxvt.keysym.Control-Shift-X    : perl:man:topdf
+```
+
+You can convert man pages with your mouse, by default this functionallity is disabled so not to confuse any other extensions, such as url-select.
+
+To enable this functionallity add the following to your **.Xdefaults/.Xresources**:
+
+```bash
+URxvt.perl-ext-common           : selection-to-clipboard,man
+
+# 3 is the "right" mouse click button
+URxvt.man2pdf.button: 3
+
+# Mark the man page name with
+# your left mouse button and right click
+# to start the conversion process
 ```
 
 # Requirements
