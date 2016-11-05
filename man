@@ -50,7 +50,8 @@ sub on_button_press {
 
   if ($page ne "") {
     if (20 > length $page) {
-      $self->check_n_convert (\$page);
+      my $clean_sel = ${$self->trim_em(\$page)};
+      $self->check_n_convert (\$clean_sel);
     }
   }
   return 0;
@@ -71,7 +72,7 @@ sub trim_em {
 sub check_n_convert {
   my ($self, $refs) = @_;
 
-  my $page = lc ${$self->trim_em($refs)};
+  my $page = lc $$refs;
   my $pdf_dir = $ENV{HOME} . "/man2pdf";
 
   my $has_ext = `man -Iw $page`;
