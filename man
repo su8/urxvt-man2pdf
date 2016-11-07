@@ -110,7 +110,7 @@ sub scan_line {
   my ($self, $refs) = @_;
   my $deref = $$refs;
 
-  return 0 unless $deref =~ /\([^)]*\)/;
+  return 0 unless $deref =~ /\w+\([^)]*\)/;
   $deref = ${$self->trim_em($refs)};
 
   my @arr = split(/\s+/, $deref);
